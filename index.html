@@ -17,11 +17,12 @@
     font-size: 2.5rem;
     margin-bottom: 0.5rem;
   }
-  #counter {
-    font-size: 3rem;
+  #counts {
+    font-size: 1.8rem;
     margin: 1rem 0;
     color: #c00;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.05em;
+    text-align: center;
   }
   button#missBtn {
     background: #ff6f91;
@@ -57,7 +58,7 @@
   /* Mobile friendly */
   @media (max-width: 600px) {
     h1 { font-size: 2rem; }
-    #counter { font-size: 2.2rem; }
+    #counts { font-size: 1.4rem; }
     button#missBtn { font-size: 1.5rem; padding: 0.8rem 2rem; }
   }
 </style>
@@ -65,9 +66,16 @@
 <body>
 
 <h1>Bubu ❤️ Dudu</h1>
-<div id="counter">0</div>
+
+<div id="counts">
+  <div id="prabhavMissed">Bubu missed Dudu: 0</div>
+  <div id="duduMissed">Dudu missed Bubu: 0</div>
+</div>
+
 <button id="missBtn">I Miss You 💖</button>
+
 <div id="lastPressed">Waiting for love...</div>
+
 <button id="soundToggle" aria-label="Toggle sound">🔈</button>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -88,45 +96,68 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  const counterElem = document.getElementById('counter');
+  // Elements
+  const prabhavMissedElem = document.getElementById('prabhavMissed');
+  const duduMissedElem = document.getElementById('duduMissed');
   const missBtn = document.getElementById('missBtn');
   const lastPressedElem = document.getElementById('lastPressed');
   const soundToggle = document.getElementById('soundToggle');
 
+  // Sound setup
   let muted = false;
   let clickSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
 
-  // Read initial count from Firebase
-  const countRef = db.ref('missCount');
+  // Keys in database for counts
+  const prabhavMissedRef = db.ref('prabhavMissedCount');
+  const duduMissedRef = db.ref('duduMissedCount');
   const lastUserRef = db.ref('lastUser');
 
-  countRef.on('value', (snapshot) => {
-    const val = snapshot.val();
-    if (val !== null) {
-      counterElem.textContent = val;
-    }
+  // Variables to hold counts locally
+  let prabhavMissedCount = 0;
+  let duduMissedCount = 0;
+
+  // Get or set username once
+  let username = localStorage.getItem('username');
+  if (!username) {
+    // Prompt user once on load for name
+    username = prompt("Who are you? Type 'prabhav' or 'dudu'").toLowerCase();
+    if (username !== 'prabhav' && username !== 'dudu') username = 'dudu'; // default fallback
+    localStorage.setItem('username', username);
+  }
+
+  // Update UI counts live from Firebase
+  prabhavMissedRef.on('value', snapshot => {
+    prabhavMissedCount = snapshot.val() || 0;
+    prabhavMissedElem.textContent = `Bubu missed Dudu: ${prabhavMissedCount}`;
   });
 
-  lastUserRef.on('value', (snapshot) => {
-    const user = snapshot.val();
-    if (user) {
-      lastPressedElem.textContent = user === 'prabhav' 
-        ? "Last pressed by: Bubu ❤️" 
-        : "Last pressed by: Dudu 💕";
+  duduMissedRef.on('value', snapshot => {
+    duduMissedCount = snapshot.val() || 0;
+    duduMissedElem.textContent = `Dudu missed Bubu: ${duduMissedCount}`;
+  });
+
+  // Update last pressed info live
+  lastUserRef.on('value', snapshot => {
+    const lastUser = snapshot.val();
+    if (lastUser === 'prabhav') {
+      lastPressedElem.textContent = "Last pressed by: Bubu ❤️";
+    } else if (lastUser === 'dudu') {
+      lastPressedElem.textContent = "Last pressed by: Dudu 💕";
     } else {
       lastPressedElem.textContent = "Waiting for love...";
     }
   });
 
   missBtn.addEventListener('click', () => {
-    countRef.transaction(current => {
-      return (current || 0) + 1;
-    });
-    // For demo, we’ll assume whoever presses increments with their name. 
-    // To differentiate you and Dudu, use prompt or URL param:
-    let user = prompt("Who is pressing? Type 'prabhav' or 'dudu'")?.toLowerCase();
-    if (user !== 'prabhav' && user !== 'dudu') user = 'dudu'; // default
-    lastUserRef.set(user);
+    // If current user is prabhav, increment duduMissedCount (she missed him)
+    // If current user is dudu, increment prabhavMissedCount (he missed her)
+    if (username === 'prabhav') {
+      duduMissedRef.transaction(current => (current || 0) + 1);
+      lastUserRef.set('prabhav');
+    } else if (username === 'dudu') {
+      prabhavMissedRef.transaction(current => (current || 0) + 1);
+      lastUserRef.set('dudu');
+    }
 
     if (!muted) {
       clickSound.currentTime = 0;
@@ -138,9 +169,7 @@
     muted = !muted;
     soundToggle.textContent = muted ? '🔇' : '🔈';
   });
-
 </script>
 
 </body>
 </html>
-

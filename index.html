@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Bubu & Dudu "I Miss You" Counter ❤️</title>
+<style>
+  body {
+    margin: 0; padding: 0;
+    background: linear-gradient(135deg, #f9d6e3, #fcd0d7);
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100vh;
+    color: #900;
+  }
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+  #counter {
+    font-size: 3rem;
+    margin: 1rem 0;
+    color: #c00;
+    letter-spacing: 0.1em;
+  }
+  button#missBtn {
+    background: #ff6f91;
+    border: none;
+    border-radius: 50px;
+    padding: 1rem 2.5rem;
+    font-size: 1.8rem;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(255,111,145,0.6);
+    transition: all 0.3s ease;
+    user-select: none;
+  }
+  button#missBtn:active {
+    transform: scale(0.95);
+    box-shadow: 0 3px 10px rgba(255,111,145,0.8);
+  }
+  #lastPressed {
+    margin-top: 1rem;
+    font-size: 1.2rem;
+    font-style: italic;
+    color: #b22;
+  }
+  #soundToggle {
+    margin-top: 2rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 2rem;
+    color: #900;
+    user-select: none;
+  }
+  /* Mobile friendly */
+  @media (max-width: 600px) {
+    h1 { font-size: 2rem; }
+    #counter { font-size: 2.2rem; }
+    button#missBtn { font-size: 1.5rem; padding: 0.8rem 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Bubu ❤️ Dudu</h1>
+<div id="counter">0</div>
+<button id="missBtn">I Miss You 💖</button>
+<div id="lastPressed">Waiting for love...</div>
+<button id="soundToggle" aria-label="Toggle sound">🔈</button>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+  // TODO: Replace with your Firebase config
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  const counterElem = document.getElementById('counter');
+  const missBtn = document.getElementById('missBtn');
+  const lastPressedElem = document.getElementById('lastPressed');
+  const soundToggle = document.getElementById('soundToggle');
+
+  let muted = false;
+  let clickSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+
+  // Read initial count from Firebase
+  const countRef = db.ref('missCount');
+  const lastUserRef = db.ref('lastUser');
+
+  countRef.on('value', (snapshot) => {
+    const val = snapshot.val();
+    if (val !== null) {
+      counterElem.textContent = val;
+    }
+  });
+
+  lastUserRef.on('value', (snapshot) => {
+    const user = snapshot.val();
+    if (user) {
+      lastPressedElem.textContent = user === 'prabhav' 
+        ? "Last pressed by: Bubu ❤️" 
+        : "Last pressed by: Dudu 💕";
+    } else {
+      lastPressedElem.textContent = "Waiting for love...";
+    }
+  });
+
+  missBtn.addEventListener('click', () => {
+    countRef.transaction(current => {
+      return (current || 0) + 1;
+    });
+    // For demo, we’ll assume whoever presses increments with their name. 
+    // To differentiate you and Dudu, use prompt or URL param:
+    let user = prompt("Who is pressing? Type 'prabhav' or 'dudu'")?.toLowerCase();
+    if (user !== 'prabhav' && user !== 'dudu') user = 'dudu'; // default
+    lastUserRef.set(user);
+
+    if (!muted) {
+      clickSound.currentTime = 0;
+      clickSound.play();
+    }
+  });
+
+  soundToggle.addEventListener('click', () => {
+    muted = !muted;
+    soundToggle.textContent = muted ? '🔇' : '🔈';
+  });
+
+</script>
+
+</body>
+</html>

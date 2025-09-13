@@ -1,168 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Bubu & Dudu "I Miss You" Counter ❤️</title>
-<style>
-  body {
-    margin: 0; padding: 0;
-    background: linear-gradient(135deg, #f9d6e3, #fcd0d7);
-    font-family: 'Comic Sans MS', cursive, sans-serif;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    height: 100vh;
-    color: #900;
-  }
-  h1 {
-    font-size: 2.5rem;
-    margin-bottom: 0.5rem;
-  }
-  #counts {
-    font-size: 1.8rem;
-    margin: 1rem 0;
-    color: #c00;
-    letter-spacing: 0.05em;
-    text-align: center;
-  }
-  button#missBtn {
-    background: #ff6f91;
-    border: none;
-    border-radius: 50px;
-    padding: 1rem 2.5rem;
-    font-size: 1.8rem;
-    color: white;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(255,111,145,0.6);
-    transition: all 0.3s ease;
-    user-select: none;
-  }
-  button#missBtn:active {
-    transform: scale(0.95);
-    box-shadow: 0 3px 10px rgba(255,111,145,0.8);
-  }
-  #lastPressed {
-    margin-top: 1rem;
-    font-size: 1.2rem;
-    font-style: italic;
-    color: #b22;
-  }
-  #soundToggle {
-    margin-top: 2rem;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    font-size: 2rem;
-    color: #900;
-    user-select: none;
-  }
-  /* Mobile friendly */
-  @media (max-width: 600px) {
-    h1 { font-size: 2rem; }
-    #counts { font-size: 1.4rem; }
-    button#missBtn { font-size: 1.5rem; padding: 0.8rem 2rem; }
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Dudu & Bubu Miss Counter</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #ffdde1, #ee9ca7);
+      color: #fff;
+      padding: 0 10px;
+      box-sizing: border-box;
+    }
+    .container {
+      text-align: center;
+      padding: 15px;
+      border-radius: 16px;
+      background: rgba(0,0,0,0.35);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 360px;
+      box-sizing: border-box;
+    }
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 12px;
+      word-break: break-word;
+    }
+    .counter {
+      font-size: 2.2rem;
+      margin: 20px 0;
+      font-weight: bold;
+    }
+    button {
+      padding: 14px;
+      border: none;
+      border-radius: 50px;
+      background: #ff6b81;
+      color: #fff;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.15s;
+      width: 100%;
+      max-width: 100%;
+      margin-top: 10px;
+    }
+    button:active {
+      transform: scale(0.96);
+      background: #ff4757;
+    }
+    select {
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      margin-bottom: 15px;
+      font-size: 1rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .fade-in {
+      animation: fadeIn 0.8s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
 <body>
+  <div class="container fade-in">
+    <h1>💖 Dudu & Bubu 💖</h1>
+    <div id="userSelect">
+      <p>Who is using?</p>
+      <select id="userRole">
+        <option value="">Select...</option>
+        <option value="dudu">Dudu (Aafreen)</option>
+        <option value="bubu">Bubu (Prabhav)</option>
+      </select>
+      <button onclick="setUser()">Confirm</button>
+    </div>
 
-<h1>Bubu ❤️ Dudu</h1>
+    <div id="mainUI" style="display:none;">
+      <p id="welcome"></p>
+      <div class="counter" id="counter">0</div>
+      <button onclick="incrementCounter()">I Missed You 💌</button>
+    </div>
+  </div>
 
-<div id="counts">
-  <div id="prabhavMissed">Bubu missed Dudu: 0</div>
-  <div id="duduMissed">Dudu missed Bubu: 0</div>
-</div>
+  <audio id="clickSound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3"></audio>
 
-<button id="missBtn">I Miss You 💖</button>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script>
+    const firebaseConfig = {
+    apiKey: "AIzaSyAo_FSaQEApoub8qR7Hikjv-TGEsry1m6Q",
+    authDomain: "dudu-1c482.firebaseapp.com",
+    projectId: "dudu-1c482",
+    storageBucket: "dudu-1c482.firebasestorage.app",
+    messagingSenderId: "520099802097",
+    appId: "1:520099802097:web:cc3fb0ec5dc73e90bd3250"
+  };
 
-<div id="lastPressed">Waiting for love...</div>
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-<button id="soundToggle" aria-label="Toggle sound">🔈</button>
+    let currentUser = null;
+    let partner = null;
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script>
-  // Your Firebase config here
-const firebaseConfig = {
-  apiKey: "AIzaSyAkGwclzyBz5KmetA2dFFDbyjWUYQ3VQno",
-  authDomain: "dudu-63a5c.firebaseapp.com",
-  databaseURL: "https://dudu-63a5c-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "dudu-63a5c",
-  storageBucket: "dudu-63a5c.firebasestorage.app",
-  messagingSenderId: "312119934843",
-  appId: "1:312119934843:web:14ec7378bf0029d04b47de"
-};
-
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-
-  const prabhavMissedRef = db.ref('prabhavMissedCount');
-  const duduMissedRef = db.ref('duduMissedCount');
-  const lastUserRef = db.ref('lastUser');
-
-  const prabhavMissedElem = document.getElementById('prabhavMissed');
-  const duduMissedElem = document.getElementById('duduMissed');
-  const missBtn = document.getElementById('missBtn');
-  const lastPressedElem = document.getElementById('lastPressed');
-  const soundToggle = document.getElementById('soundToggle');
-
-  let muted = false;
-  let clickSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
-
-  // Function to get or ask username only ONCE
-  function getUsername() {
-    let username = localStorage.getItem('username');
-    if (!username) {
-      username = prompt("Who are you? Type 'prabhav' or 'dudu'").toLowerCase();
-      if (username !== 'prabhav' && username !== 'dudu') username = 'dudu'; // default fallback
-      localStorage.setItem('username', username);
-    }
-    return username;
-  }
-
-  const username = getUsername();
-
-  prabhavMissedRef.on('value', snapshot => {
-    const count = snapshot.val() || 0;
-    prabhavMissedElem.textContent = `Bubu missed Dudu: ${count}`;
-  });
-
-  duduMissedRef.on('value', snapshot => {
-    const count = snapshot.val() || 0;
-    duduMissedElem.textContent = `Dudu missed Bubu: ${count}`;
-  });
-
-  lastUserRef.on('value', snapshot => {
-    const lastUser = snapshot.val();
-    if (lastUser === 'prabhav') {
-      lastPressedElem.textContent = "Last pressed by: Bubu ❤️";
-    } else if (lastUser === 'dudu') {
-      lastPressedElem.textContent = "Last pressed by: Dudu 💕";
-    } else {
-      lastPressedElem.textContent = "Waiting for love...";
-    }
-  });
-
-  missBtn.addEventListener('click', () => {
-    if (username === 'prabhav') {
-      duduMissedRef.transaction(current => (current || 0) + 1);
-      lastUserRef.set('prabhav');
-    } else if (username === 'dudu') {
-      prabhavMissedRef.transaction(current => (current || 0) + 1);
-      lastUserRef.set('dudu');
+    function setUser() {
+      const role = document.getElementById('userRole').value;
+      if (!role) return alert('Please select who you are!');
+      currentUser = role;
+      partner = (role === 'dudu') ? 'bubu' : 'dudu';
+      document.getElementById('userSelect').style.display = 'none';
+      document.getElementById('mainUI').style.display = 'block';
+      document.getElementById('welcome').innerText = `I love u ${currentUser === 'dudu' ? 'Dudu' : 'Bubu'} 💕`;
+      listenCounter();
     }
 
-    if (!muted) {
-      clickSound.currentTime = 0;
-      clickSound.play();
+    function incrementCounter() {
+      const sound = document.getElementById('clickSound');
+      sound.currentTime = 0;
+      sound.play();
+      const ref = db.ref(partner);
+      ref.transaction(count => (count || 0) + 1);
     }
-  });
 
-  soundToggle.addEventListener('click', () => {
-    muted = !muted;
-    soundToggle.textContent = muted ? '🔇' : '🔈';
-  });
-</script>
-
+    function listenCounter() {
+      const ref = db.ref(currentUser);
+      ref.on('value', snapshot => {
+        document.getElementById('counter').innerText = snapshot.val() || 0;
+      });
+    }
+  </script>
 </body>
 </html>
-
